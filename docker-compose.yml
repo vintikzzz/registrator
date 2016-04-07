@@ -1,0 +1,28 @@
+version: '2'
+services:
+  consul:
+    command: -server -bootstrap
+    image: progrium/consul
+    ports:
+      - "8300:8300"
+      - "8400:8400"
+      - "8500:8500"
+      - "8600:53/udp"
+
+  registrator:
+    command: -internal consul://consul:8500
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    depends_on:
+      - consul
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+
+  app:
+    image: buildpack-deps:jessie-curl
+    command: /bin/sh -c 'while true; do sleep 1; done'
+    expose:
+      - 3000
+    depends_on:
+      - registrator
